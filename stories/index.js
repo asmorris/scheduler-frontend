@@ -61,10 +61,18 @@ storiesOf("DayList", module)
 		backgrounds: [{ name: "dark", value: "#222f3e", default: true }],
 	})
 	.add("Monday", () => (
-		<DayList days={days} day={"Monday"} setDay={action("setDay")} />
+		<DayList
+			days={days}
+			day={"Monday"}
+			setDay={() => action("setDay")("Monday")}
+		/>
 	))
 	.add("Tuesday", () => (
-		<DayList days={days} day={"Tuesday"} setDay={action("setDay")} />
+		<DayList
+			days={days}
+			day={"Tuesday"}
+			setDay={() => action("setDay")("Tuesday")}
+		/>
 	));
 
 const interviewer = {
@@ -97,7 +105,7 @@ storiesOf("InterviewerListItem", module)
 			id={interviewer.id}
 			name={interviewer.name}
 			avatar={interviewer.avatar}
-			setInterviewer={action("setInterviewer")}
+			setInterviewer={() => action("setInterviewer")(interviewer.id)}
 		/>
 	));
 
