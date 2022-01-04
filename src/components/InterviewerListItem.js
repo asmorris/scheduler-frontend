@@ -6,7 +6,7 @@ import "./InterviewerListItem.scss";
 export default function InterviewerListItem(props) {
 	return (
 		<li
-			onClick={() => props.setInterviewer(props.name)}
+			onClick={() => props.setInterviewer(props.id)}
 			className={classNames("interviewers__item", {
 				"interviewers__item--selected": props.selected,
 			})}
