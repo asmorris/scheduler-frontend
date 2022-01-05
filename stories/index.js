@@ -148,6 +148,22 @@ storiesOf("Appointment", module)
 		backgrounds: [{ name: "white", value: "#fff", default: true }],
 	})
 	.add("Appointment", () => <Appointment />)
+	.add("Appointment Empty", () => (
+		<>
+			<Appointment id={1} time="12pm" />
+			<Appointment id="last" time="1pm" />
+		</>
+	))
+	.add("Appointment Booked", () => (
+		<>
+			<Appointment
+				id={1}
+				time="12pm"
+				interview={{ student: "Darth Vader", interviewer }}
+			/>
+			<Appointment id="last" time="1pm" />
+		</>
+	))
 	.add("With Time", () => <Appointment time="12pm" />)
 	.add("Header", () => <Header time="12pm" />)
 	.add("Empty", () => <Empty onAdd={action("onAdd")} />)
@@ -156,7 +172,7 @@ storiesOf("Appointment", module)
 			onEdit={action("onEdit")}
 			onDelete={action("onDelete")}
 			student="Khaleesi"
-			interviewer="Tyrion Lannister"
+			interviewer={interviewer}
 		/>
 	))
 	.add("Confirm", () => (
