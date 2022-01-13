@@ -18,3 +18,17 @@ export function getInterview(state, interview) {
 
 	return { ...interview, interviewer: state.interviewers[interviewerId] };
 }
+
+export function getInterviewersForDay(state, day) {
+	const days = state.days;
+	const interviewers = state.interviewers;
+	const arr = [];
+	days.forEach((d) => {
+		if (d.name === day) {
+			d.interviewers.forEach((interviewer) => {
+				arr.push(interviewers[interviewer]);
+			});
+		}
+	});
+	return arr;
+}
