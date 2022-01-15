@@ -16,6 +16,7 @@ const stateMachine = {
 	CREATE: "CREATE",
 	SAVING: "SAVING",
 	DELETING: "DELETING",
+	EDIT: "EDIT",
 };
 
 export default function Appointment(props) {
@@ -37,8 +38,11 @@ export default function Appointment(props) {
 		transition(stateMachine.CONFIRM);
 	};
 
+	const editInterview = () => {
+		transition(stateMachine.EDIT);
+	};
+
 	const handleConfirmStatus = () => {
-		transition(stateMachine.DELETING);
 		props.cancelInterview(props.id);
 		transition(stateMachine.EMPTY);
 	};
@@ -54,12 +58,22 @@ export default function Appointment(props) {
 					student={props.interview.student}
 					interviewer={props.interview.interviewer}
 					onDelete={cancelInterview}
+					onEdit={editInterview}
 				/>
 			)}
 			{mode === stateMachine.CREATE && (
 				<Form
 					name=""
 					interviewers={props.interviewers}
+					onCancel={() => back()}
+					onSave={save}
+				/>
+			)}
+			{mode === stateMachine.EDIT && (
+				<Form
+					name={props.interview.student}
+					interviewers={props.interviewers}
+					interviewer={props.interview.interviewer.id}
 					onCancel={() => back()}
 					onSave={save}
 				/>
