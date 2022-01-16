@@ -38,7 +38,15 @@ export default function Application(props) {
 		});
 	}, []);
 
-	const bookInterview = (id, interview) => {
+	const bookInterview = async (id, interview) => {
+		/*
+			This piece is for if the user forgets to add an interviewer - originally it just broke the app. This adds the error state and everything to that, but complicates things.
+			I had to move to async await pattern to make things work for this, not entirely sure what the reason behind that was.
+		*/
+		if (!interview.interviewer) {
+			throw "No interviewer selected";
+		}
+
 		const appointment = {
 			...state.appointments[id],
 			interview: { ...interview },
@@ -48,21 +56,33 @@ export default function Application(props) {
 			...state.appointments,
 			[id]: appointment,
 		};
-		axios
-			.put(`/api/appointments/${id}`, appointment)
-			.then(setState({ ...state, appointments }));
+
+		const res = await axios.put(`/api/appointments/${id}`, appointment);
+
+		if (res) {
+			return setState({ ...state, appointments });
+		} else {
+			throw "Could not save value";
+		}
 	};
 
-	const cancelInterview = (interviewId) => {
+	const cancelInterview = async (interviewId) => {
 		let appointments = state.appointments;
-		let { id, time } = state.appointments[interviewId];
-		setState({
-			...state,
-			appointments: {
-				...appointments,
-				[interviewId]: { id, time, interview: null },
-			},
-		});
+		let appointment = state.appointments[interviewId];
+		let { id, time } = appointment;
+		let res = await axios.delete(`/api/appointments/${appointment.id}`);
+
+		if (res) {
+			return setState({
+				...state,
+				appointments: {
+					...appointments,
+					[interviewId]: { id, time, interview: null },
+				},
+			});
+		} else {
+			throw "Could not delete";
+		}
 	};
 
 	dailyAppointments = getAppointmentsForDay(state, state.day);

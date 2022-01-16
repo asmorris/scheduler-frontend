@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import useVisualMode from "hooks/useVisualMode";
 
 import Header from "./Header";
@@ -9,6 +9,7 @@ import "./styles.scss";
 import Form from "./Form";
 import Status from "./Status";
 import Confirm from "./Confirm";
+import Error from "./Error";
 
 const stateMachine = {
 	EMPTY: "EMPTY",
@@ -17,6 +18,8 @@ const stateMachine = {
 	SAVING: "SAVING",
 	DELETING: "DELETING",
 	EDIT: "EDIT",
+	ERROR_SAVE: "ERROR_SAVE",
+	ERROR_DELETE: "ERROR_DELETE",
 };
 
 export default function Appointment(props) {
@@ -25,26 +28,32 @@ export default function Appointment(props) {
 	);
 
 	const save = (name, interviewer) => {
-		transition(stateMachine.SAVING);
 		const interview = {
 			student: name,
 			interviewer,
 		};
-		props.bookInterview(props.id, interview);
-		transition(stateMachine.SHOW);
+		transition(stateMachine.SAVING);
+
+		props
+			.bookInterview(props.id, interview)
+			.then(() => transition(stateMachine.SHOW))
+			.catch(() => transition(stateMachine.ERROR_SAVE, true));
+	};
+
+	const destroy = () => {
+		transition(stateMachine.DELETING, true);
+		props
+			.cancelInterview(props.id)
+			.then(() => transition(stateMachine.EMPTY))
+			.catch(() => transition(stateMachine.ERROR_DELETE, true));
 	};
 
 	const cancelInterview = () => {
-		transition(stateMachine.CONFIRM);
+		return transition(stateMachine.CONFIRM);
 	};
 
 	const editInterview = () => {
-		transition(stateMachine.EDIT);
-	};
-
-	const handleConfirmStatus = () => {
-		props.cancelInterview(props.id);
-		transition(stateMachine.EMPTY);
+		return transition(stateMachine.EDIT);
 	};
 
 	return (
@@ -79,11 +88,23 @@ export default function Appointment(props) {
 				/>
 			)}
 			{mode === stateMachine.SAVING && <Status message="Saving..." />}
+			{mode === stateMachine.ERROR_SAVE && (
+				<Error
+					message="There was an error during saving. Please try again"
+					onClose={() => back()}
+				/>
+			)}
+			{mode === stateMachine.ERROR_DELETE && (
+				<Error
+					message="There was an error during deleting. Please try again"
+					onClose={() => transition(stateMachine.SHOW, true)}
+				/>
+			)}
 			{mode === stateMachine.DELETING && <Status message="Deleting..." />}
 			{mode === stateMachine.CONFIRM && (
 				<Confirm
 					message="Are you sure you want to delete?"
-					onConfirm={handleConfirmStatus}
+					onConfirm={destroy}
 					onCancel={() => transition(stateMachine.SHOW)}
 				/>
 			)}
