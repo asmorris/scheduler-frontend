@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
 
 import "components/Application.scss";
 import DayList from "./DayList";
@@ -10,80 +9,14 @@ import {
 	getInterviewersForDay,
 } from "../helpers/selectors";
 
-export default function Application(props) {
-	let [state, setState] = useState({
-		day: "Monday",
-		days: [],
-		appointments: {},
-		interviewers: {},
-	});
+import useApplicationData from "hooks/useApplicationData";
 
-	const setDay = (day) => setState({ ...state, day });
+export default function Application() {
+	const { state, setDay, bookInterview, cancelInterview } =
+		useApplicationData();
+
 	let dailyAppointments = [];
 	let dailyInterviewers = [];
-
-	useEffect(() => {
-		const getDays = axios.get("/api/days");
-		const getAppointments = axios.get("/api/appointments");
-		const getInterviewers = axios.get("/api/interviewers");
-		Promise.all([getDays, getAppointments, getInterviewers]).then((all) => {
-			const [days, appointments, interviewers] = all;
-
-			setState((prev) => ({
-				...prev,
-				days: days.data,
-				appointments: appointments.data,
-				interviewers: interviewers.data,
-			}));
-		});
-	}, []);
-
-	const bookInterview = async (id, interview) => {
-		/*
-			This piece is for if the user forgets to add an interviewer - originally it just broke the app. This adds the error state and everything to that, but complicates things.
-			I had to move to async await pattern to make things work for this, not entirely sure what the reason behind that was.
-		*/
-		if (!interview.interviewer) {
-			throw "No interviewer selected";
-		}
-
-		const appointment = {
-			...state.appointments[id],
-			interview: { ...interview },
-		};
-
-		const appointments = {
-			...state.appointments,
-			[id]: appointment,
-		};
-
-		const res = await axios.put(`/api/appointments/${id}`, appointment);
-
-		if (res) {
-			return setState({ ...state, appointments });
-		} else {
-			throw "Could not save value";
-		}
-	};
-
-	const cancelInterview = async (interviewId) => {
-		let appointments = state.appointments;
-		let appointment = state.appointments[interviewId];
-		let { id, time } = appointment;
-		let res = await axios.delete(`/api/appointments/${appointment.id}`);
-
-		if (res) {
-			return setState({
-				...state,
-				appointments: {
-					...appointments,
-					[interviewId]: { id, time, interview: null },
-				},
-			});
-		} else {
-			throw "Could not delete";
-		}
-	};
 
 	dailyAppointments = getAppointmentsForDay(state, state.day);
 	dailyInterviewers = getInterviewersForDay(state, state.day);

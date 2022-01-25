@@ -64,8 +64,8 @@ export default function Appointment(props) {
 			)}
 			{mode === stateMachine.SHOW && (
 				<Show
-					student={props.interview.student}
-					interviewer={props.interview.interviewer}
+					student={props.interview && props.interview.student}
+					interviewer={props.interview && props.interview.interviewer}
 					onDelete={cancelInterview}
 					onEdit={editInterview}
 				/>
@@ -82,7 +82,7 @@ export default function Appointment(props) {
 				<Form
 					name={props.interview.student}
 					interviewers={props.interviewers}
-					interviewer={props.interview.interviewer.id}
+					interviewer={props.interview && props.interview.interviewer.id}
 					onCancel={() => back()}
 					onSave={save}
 				/>
@@ -91,7 +91,7 @@ export default function Appointment(props) {
 			{mode === stateMachine.ERROR_SAVE && (
 				<Error
 					message="There was an error during saving. Please try again"
-					onClose={() => back()}
+					onClose={() => transition(stateMachine.EMPTY, true)}
 				/>
 			)}
 			{mode === stateMachine.ERROR_DELETE && (
