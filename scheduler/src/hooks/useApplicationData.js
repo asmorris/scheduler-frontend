@@ -54,7 +54,8 @@ export default function useApplicationData() {
 	const socket = useRef(null);
 
 	useEffect(() => {
-		socket.current = new WebSocket("ws://localhost:8001");
+		console.log(process.env.REACT_APP_WEBSOCKET_URL);
+		socket.current = new WebSocket(`${process.env.REACT_APP_WEBSOCKET_URL}`);
 		socket.current.onopen = () => socket.current.send("ping");
 		const getDays = axios.get("/api/days");
 		const getAppointments = axios.get("/api/appointments");
@@ -139,6 +140,9 @@ export default function useApplicationData() {
 						},
 					},
 				});
+				data.interview
+					? updateSpots(dispatchValues.DECREMENT)
+					: updateSpots(dispatchValues.INCREMENT);
 			}
 		};
 	}
