@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import useVisualMode from "hooks/useVisualMode";
 
 import Header from "./Header";
@@ -23,9 +23,19 @@ const stateMachine = {
 };
 
 export default function Appointment(props) {
+	const interview = props.interview;
 	const { mode, transition, back } = useVisualMode(
-		props.interview ? stateMachine.SHOW : stateMachine.EMPTY
+		interview ? stateMachine.SHOW : stateMachine.EMPTY
 	);
+
+	useEffect(() => {
+		if (interview && mode === stateMachine.EMPTY) {
+			transition(stateMachine.SHOW);
+		}
+		if (interview === null && mode === stateMachine.SHOW) {
+			transition(stateMachine.EMPTY);
+		}
+	}, [interview, transition, mode]);
 
 	const save = (name, interviewer) => {
 		const interview = {
@@ -62,10 +72,10 @@ export default function Appointment(props) {
 			{mode === stateMachine.EMPTY && (
 				<Empty onAdd={() => transition(stateMachine.CREATE)} />
 			)}
-			{mode === stateMachine.SHOW && (
+			{mode === stateMachine.SHOW && interview && (
 				<Show
-					student={props.interview && props.interview.student}
-					interviewer={props.interview && props.interview.interviewer}
+					student={interview.student}
+					interviewer={interview.interviewer}
 					onDelete={cancelInterview}
 					onEdit={editInterview}
 				/>
@@ -80,9 +90,9 @@ export default function Appointment(props) {
 			)}
 			{mode === stateMachine.EDIT && (
 				<Form
-					name={props.interview.student}
+					name={interview.student}
 					interviewers={props.interviewers}
-					interviewer={props.interview && props.interview.interviewer.id}
+					interviewer={interview && interview.interviewer.id}
 					onCancel={() => back()}
 					onSave={save}
 				/>

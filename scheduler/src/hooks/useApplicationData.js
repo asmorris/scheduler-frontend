@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from "react";
+import { useReducer, useEffect, useRef } from "react";
 import axios from "axios";
 import { getAppointmentsForDay } from "helpers/selectors";
 import Error from "components/Appointment/Error";
@@ -51,7 +51,11 @@ export default function useApplicationData() {
 		appointments: {},
 		interviewers: {},
 	});
+	const socket = useRef(null);
+
 	useEffect(() => {
+		socket.current = new WebSocket("ws://localhost:8001");
+		socket.current.onopen = () => socket.current.send("ping");
 		const getDays = axios.get("/api/days");
 		const getAppointments = axios.get("/api/appointments");
 		const getInterviewers = axios.get("/api/interviewers");
@@ -68,15 +72,15 @@ export default function useApplicationData() {
 				},
 			});
 		});
+
+		return () => {
+			socket.current.close();
+		};
 	}, []);
 
 	const setDay = (value) => dispatch({ type: dispatchValues.SET_DAY, value });
 
 	const bookInterview = async (id, interview) => {
-		/*
-			This piece is for if the user forgets to add an interviewer - originally it just broke the app. This adds the error state and everything to that, but complicates things.
-			I had to move to async await pattern to make things work for this, not entirely sure what the reason behind that was.
-		*/
 		if (!interview.interviewer) {
 			throw new Error("No interviewer selected");
 		}
@@ -99,10 +103,45 @@ export default function useApplicationData() {
 				type: dispatchValues.SET_INTERVIEW,
 				value: { appointments },
 			});
+			socket.current.send(
+				JSON.stringify({
+					type: "SET_INTERVIEW",
+					id,
+					interview: {
+						student: interview.student,
+						interviewer: {
+							id: interview.interviewer.id,
+							name: interview.interviewer.name,
+							avatar: interview.interviewer.avatar,
+						},
+					},
+				})
+			);
 		} else {
 			throw new Error("Could not save value");
 		}
 	};
+
+	if (socket.current) {
+		socket.current.onmessage = (event) => {
+			let appointments = state.appointments;
+			const data = JSON.parse(event.data);
+
+			if (data.type === "SET_INTERVIEW") {
+				dispatch({
+					type: dispatchValues.SET_INTERVIEW,
+					value: {
+						appointments: {
+							...appointments,
+							[data.id]: {
+								interview: data.interview ? { ...data.interview } : null,
+							},
+						},
+					},
+				});
+			}
+		};
+	}
 
 	const cancelInterview = async (interviewId) => {
 		let appointments = state.appointments;
@@ -121,6 +160,13 @@ export default function useApplicationData() {
 					},
 				},
 			});
+			socket.current.send(
+				JSON.stringify({
+					type: "SET_INTERVIEW",
+					id,
+					interview: null,
+				})
+			);
 		} else {
 			throw new Error("Could not delete");
 		}
