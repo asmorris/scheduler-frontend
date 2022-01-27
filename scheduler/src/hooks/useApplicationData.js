@@ -3,46 +3,7 @@ import axios from "axios";
 import { getAppointmentsForDay } from "helpers/selectors";
 import Error from "components/Appointment/Error";
 
-const dispatchValues = {
-	INCREMENT: "INCREMENT",
-	DECREMENT: "DECREMENT",
-	SET_DAY: "SET_DAY",
-	SET_APPLICATION_DATA: "SET_APPLICATION_DATA",
-	SET_INTERVIEW: "SET_INTERVIEW",
-	UPDATE_SPOTS: "UPDATE_SPOTS",
-};
-
-const reducer = (state, action) => {
-	switch (action.type) {
-		case dispatchValues.SET_DAY:
-			return {
-				...state,
-				day: action.value,
-			};
-		case dispatchValues.SET_APPLICATION_DATA:
-			const { day, days, appointments, interviewers } = action.value;
-			return {
-				day,
-				days,
-				appointments,
-				interviewers,
-			};
-		case dispatchValues.SET_INTERVIEW:
-			return {
-				...state,
-				appointments: action.value.appointments,
-			};
-		case dispatchValues.UPDATE_SPOTS:
-			return {
-				...state,
-				days: action.value.days,
-			};
-		default:
-			throw new Error(
-				`Tried to reduce with unsupported action type ${action.type}`
-			);
-	}
-};
+import { reducer, dispatchValues } from "reducers/application";
 
 export default function useApplicationData() {
 	const [state, dispatch] = useReducer(reducer, {
@@ -89,15 +50,19 @@ export default function useApplicationData() {
 			interview: { ...interview },
 		};
 
+		const prevAppointments = { ...state.appointments };
+
 		const appointments = {
-			...state.appointments,
+			...prevAppointments,
 			[id]: appointment,
 		};
 
 		const res = await axios.put(`/api/appointments/${id}`, appointment);
 
 		if (res.status === 204) {
-			updateSpots(dispatchValues.DECREMENT);
+			if (prevAppointments[appointment.id].interview === null) {
+				updateSpots(dispatchValues.DECREMENT);
+			}
 			dispatch({
 				type: dispatchValues.SET_INTERVIEW,
 				value: { appointments },
