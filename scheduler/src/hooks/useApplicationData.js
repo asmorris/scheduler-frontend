@@ -54,7 +54,6 @@ export default function useApplicationData() {
 	const socket = useRef(null);
 
 	useEffect(() => {
-		console.log(process.env.REACT_APP_WEBSOCKET_URL);
 		socket.current = new WebSocket(`${process.env.REACT_APP_WEBSOCKET_URL}`);
 		socket.current.onopen = () => socket.current.send("ping");
 		const getDays = axios.get("/api/days");
@@ -73,7 +72,6 @@ export default function useApplicationData() {
 				},
 			});
 		});
-
 		return () => {
 			socket.current.close();
 		};
