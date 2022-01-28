@@ -10,6 +10,7 @@ export default function InterviewerListItem(props) {
 			className={classNames("interviewers__item", {
 				"interviewers__item--selected": props.selected,
 			})}
+			data-testid="interviewer"
 		>
 			<img
 				className="interviewers__item-image"
